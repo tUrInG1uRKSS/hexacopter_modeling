@@ -17,7 +17,7 @@ clear all; close all; clc;
 %         With the Euler model, the simulaion fails. With the quaternions model, it works 
 % Case 6: TAKEOFF AND YAW ROTATION 
 %         Thrust > Gravity, the drone should go up (vz > 0) and should rotate in yaw (psi > 0)
-test_case   = 1;         % Choose case 0–6
+test_case   = 3;         % Choose case 0–6
 model_type  = 'euler';    % 'euler'  or  'quat'
 animate_flag = true;     % Show animation or not
 tf = 2;                  % Simulation time

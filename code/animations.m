@@ -158,7 +158,7 @@ for k = 1:step:N
            'UData',Zb(1)-pos(1),'VData',Zb(2)-pos(2),'WData',Zb(3)-pos(3));
 
     %% Update animation title
-    set(txt,'String', sprintf('Frame %d / %d', k, N));
+    set(txt, 'String', sprintf('Frame %d / %d — x=%.2f y=%.2f z=%.2f', k, N, pos(1), pos(2), pos(3)));
 
     drawnow limitrate
 
