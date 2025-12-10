@@ -1,0 +1,57 @@
+clc; clear; close all;
+%% Paremeters
+PARAM.g = 9.81; % m/s^2
+PARAM.m = 2; % kg
+PARAM.D = 0.2; % m
+PARAM.H = 0.04; % m
+PARAM.CT = 1e-5; 
+PARAM.rho = 1.293; % kg/m^3
+PARAM.l = 0.25; % m
+PARAM.CD = 1e-7; 
+
+%% Graphique
+
+% Parámetros del hexacóptero
+R = 0.3;       % Longitud de los brazos
+rRotor = PARAM.l/2; % Radio de cada rotor
+nArms = 6;   % Hexacóptero
+
+figure;
+hold on; grid on; axis equal;
+xlabel('X'); ylabel('Y'); zlabel('Z');
+title('Hexacóptero en 3D');
+
+% Dibujar el cuerpo central 
+n = 50; % resolucion
+[xc,yc,zc] = cylinder(PARAM.D/2,n);
+surf(xc,yc,PARAM.H*zc,'FaceColor','k','EdgeColor','none');
+
+% Dibujar los brazos y rotores
+for i = 1:nArms
+    ang = 2*pi*(i-1)/nArms; % ángulo del brazo
+    
+    % Extremo del brazo
+    xEnd = R*cos(ang);
+    yEnd = R*sin(ang);
+    zEnd = PARAM.H/2;
+    
+    % Brazo como una línea
+    plot3([0 xEnd],[0 yEnd],[PARAM.H/2 zEnd],'LineWidth',2,'Color','b');
+    
+    % Rotor como un disco en el extremo
+    th = linspace(0,2*pi,50);
+    xRotor = xEnd + rRotor*cos(th);
+    yRotor = yEnd + rRotor*sin(th);
+    zRotor = zEnd*ones(size(th));
+    fill3(xRotor,yRotor,zRotor,'r');
+end
+
+view(3);
+
+%% Dynamique
+
+
+%% Functions
+
+
+

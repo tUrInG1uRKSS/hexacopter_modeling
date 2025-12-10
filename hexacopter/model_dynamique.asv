@@ -1,0 +1,64 @@
+function xdot = model_dynamique(~, x, u, PARAM)
+% model_dynamique  Dinámica simplificada de un hexacóptero
+% Entradas:
+%   ~     : tiempo (no usado, pero requerido por ODE45)
+%   x     : estado (9x1) = [vx; vy; vz; phi; theta; psi; p; q; r]
+%   u     : entradas de los 6 rotores (6x1), empujes en N
+%   PARAM : estructura con campos .g, .m, .l, .I, .alfa (6x1), .beta (6x1)
+%
+% Salida:
+%   xdot  : derivada del estado (9x1)
+
+% Extraer estados
+vx = x(1); vy = x(2); vz = x(3);
+phi = x(4); theta = x(5); psi = x(6);
+omega = x(7:9);    % [p; q; r]
+
+% Parámetros por seguridad si faltan
+if ~isfield(PARAM,'g'), PARAM.g = 9.81; end
+if ~isfield(PARAM,'m'), PARAM.m = 1.0; end
+if ~isfield(PARAM,'l'), PARAM.l = 0.23; end
+if ~isfield(PARAM,'I'), PARAM.I = eye(3)*0.01; end
+if ~isfield(PARAM,'alfa'), PARAM.alfa = [1;-1;1;-1;1;-1]; end
+if ~isfield(PARAM,'beta'), PARAM.beta = ones(6,1); end
+if ~isfield(PARAM,'kd'), PARAM.kd = 1e-3; end   % coef arrastre -> momento yaw por rotor
+
+% Posiciones de los rotores en el cuerpo (distribuidos uniformemente)
+angles = (0:5)' * (2*pi/6);       % 0, 60, 120, ...
+xi = PARAM.l * cos(angles);      % x_i
+yi = PARAM.l * sin(angles);      % y_i
+
+% Fuerzas (empujes) por rotor (si el usuario pasa otra cosa, aquí se interpreta como N)
+F = PARAM.beta .* u(:);          % asegurar columna 6x1
+T_total = sum(F);                % empuje total (N) en eje z del cuerpo
+
+% Momentos producidos por empujes (r x F_body) con F_body = [0;0;F_i]
+% r_i = [x_i; y_i; 0] => r_i x F_i = [ y_i*F_i; -x_i*F_i; 0 ]
+Mx = sum( yi .* F );
+My = - sum( xi .* F );
+
+% Momento de guiñada por arrastre/rotación de rotores (proporcional a u)
+Mz = sum( PARAM.alfa .* u(:) ) * PARAM.kd;
+
+% Matriz rotación (cuerpo -> inercial) ZYX
+R = rotz(psi) * roty(theta) * rotx(phi);
+
+% Dinámica traslacional (velocidades están en marco inercial)
+vdot = (1/PARAM.m) * ( R * [0;0;T_total] ) - [0;0;-PARAM.g];
+
+% Cinemática Euler (relación entre p,q,r y phi_dot,theta_dot,psi_dot)
+p = omega(1); q = omega(2); r = omega(3);
+T_e = [ 1, sin(phi)*tan(theta),  cos(phi)*tan(theta);
+        0, cos(phi),           -sin(phi);
+        0, sin(phi)/cos(theta), cos(phi)/cos(theta) ];
+euler_dot = T_e * omega;
+
+% Dinámica rotacional
+Tau = [Mx; My; Mz];
+omega_dot = PARAM.I \ ( Tau - cross(omega, PARAM.I * omega) );
+
+% Construir xdot (mismo orden que x)
+xdot = [ vdot(:); euler_dot(:); omega_dot(:) ];
+
+end
+
